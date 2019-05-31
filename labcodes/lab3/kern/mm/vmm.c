@@ -373,7 +373,7 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
            int ret = swap_in(mm, addr, &page);
            page_insert(mm->pgdir, page, addr, perm);
            swap_map_swappable(mm, addr, page, 1);
-           page->pra_vaddr = addr; // pra_vaddr(虚拟页地址)用于在swap扇区中寻找虚拟页对应的位置
+           page->pra_vaddr = addr; // pra_vaddr(虚拟页地址)用于在swap扇区中寻找虚拟页对应的位置，相当于key
        } else {
            cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
            goto failed;
