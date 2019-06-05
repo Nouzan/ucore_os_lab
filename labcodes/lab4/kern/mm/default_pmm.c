@@ -159,6 +159,7 @@ default_free_pages(struct Page *base, size_t n) {
     base->property = n;
     SetPageProperty(base);
     list_entry_t *le = list_next(&free_list);
+    list_entry_t *after = &free_list;
     while (le != &free_list) {
         p = le2page(le, page_link);
         le = list_next(le);
@@ -166,16 +167,19 @@ default_free_pages(struct Page *base, size_t n) {
             base->property += p->property;
             ClearPageProperty(p);
             list_del(&(p->page_link));
-        }
-        else if (p + p->property == base) {
+        } else if (p + p->property == base) {
             p->property += base->property;
             ClearPageProperty(base);
             base = p;
             list_del(&(p->page_link));
+        } else if (p >= base) {
+            assert (p != base);
+            after = &(p->page_link);
+            break;
         }
     }
     nr_free += n;
-    list_add(&free_list, &(base->page_link));
+    list_add_before(after, &(base->page_link));
 }
 
 static size_t
