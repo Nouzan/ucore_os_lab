@@ -172,17 +172,17 @@ get_pid(void) {
 // NOTE: before call switch_to, should load  base addr of "proc"'s new PDT
 void
 proc_run(struct proc_struct *proc) {
-    if (proc != current) {
-        bool intr_flag;
+    if (proc != current) { // 检查将要运行的进程并没有正在运行
+        bool intr_flag; // 用于同步
         struct proc_struct *prev = current, *next = proc;
-        local_intr_save(intr_flag);
+        local_intr_save(intr_flag); // 禁用中断，避免无限切换及数据竞争
         {
             current = proc;
-            load_esp0(next->kstack + KSTACKSIZE);
-            lcr3(next->cr3);
-            switch_to(&(prev->context), &(next->context));
+            load_esp0(next->kstack + KSTACKSIZE); // 恢复特权级
+            lcr3(next->cr3); // 加载PDT
+            switch_to(&(prev->context), &(next->context)); // 上下文切换（proc_run返回后将会跳转到current的代码继续执行）
         }
-        local_intr_restore(intr_flag);
+        local_intr_restore(intr_flag); // 恢复中断
     }
 }
 
