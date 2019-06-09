@@ -61,6 +61,7 @@ idt_init(void) {
     for (i = 0; i < sizeof(idt) / sizeof(idt[0]); i ++) {
         SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL); // SETGATE 是一个宏，所以可以用idt[i]，而不需要用&idt[i]
     }
+    SETGATE(idt[T_SYSCALL], 1, GD_KTEXT, __vectors[T_SYSCALL], DPL_USER);
     lidt(&idt_pd);
 }
 
@@ -227,9 +228,10 @@ trap_dispatch(struct trapframe *tf) {
          */
         ticks ++;
         if (ticks % TICK_NUM == 0) {
-            print_ticks();
+            // print_ticks();
+            assert(current != NULL);
+            current->need_resched = 1;
         }
-        break;
         /* LAB5 YOUR CODE */
         /* you should upate you lab1 code (just add ONE or TWO lines of code):
          *    Every TICK_NUM cycle, you should set current process's current->need_resched = 1
