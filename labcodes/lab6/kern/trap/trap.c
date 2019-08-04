@@ -292,7 +292,6 @@ trap(struct trapframe *tf) {
         bool in_kernel = trap_in_kernel(tf);
     
         trap_dispatch(tf);
-    
         current->tf = otf;
         if (!in_kernel) {
             if (current->flags & PF_EXITING) {
