@@ -260,7 +260,9 @@ run_test() {
         select=
         case $1 in
             -tag|-prog)
-                select=`expr substr $1 2 ${#1}`
+                raw_select=$1
+                len=${#1}
+                select=${raw_select:1:$len}
                 eval $select='$2'
                 ;;
         esac

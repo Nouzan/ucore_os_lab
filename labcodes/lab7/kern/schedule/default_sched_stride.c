@@ -8,7 +8,7 @@
 
 /* You should define the BigStride constant here*/
 /* LAB6: YOUR CODE */
-#define BIG_STRIDE    /* you should give a value, and is ??? */
+#define BIG_STRIDE ((1 << 31) - 1)    /* you should give a value, and is ??? */
 
 /* The compare function for two skew_heap_node_t's and the
  * corresponding procs*/
@@ -17,6 +17,16 @@ proc_stride_comp_f(void *a, void *b)
 {
      struct proc_struct *p = le2proc(a, lab6_run_pool);
      struct proc_struct *q = le2proc(b, lab6_run_pool);
+     int32_t c = p->lab6_stride - q->lab6_stride;
+     if (c > 0) return 1;
+     else if (c == 0) return 0;
+     else return -1;
+}
+
+static int
+proc_stride_comp_rq_f(void *a, void *b) {
+     struct proc_struct *p = le2proc(a, run_link);
+     struct proc_struct *q = le2proc(b, run_link);
      int32_t c = p->lab6_stride - q->lab6_stride;
      if (c > 0) return 1;
      else if (c == 0) return 0;
@@ -41,6 +51,10 @@ stride_init(struct run_queue *rq) {
       * (2) init the run pool: rq->lab6_run_pool
       * (3) set number of process: rq->proc_num to 0       
       */
+     list_init(&(rq->run_list));
+     rq->lab6_run_pool = NULL;
+     rq->proc_num = 0;
+
 }
 
 /*
@@ -67,6 +81,13 @@ stride_enqueue(struct run_queue *rq, struct proc_struct *proc) {
       * (3) set proc->rq pointer to rq
       * (4) increase rq->proc_num
       */
+     assert(list_empty(&(proc->run_link)));
+     list_add_before(&(rq->run_list), &(proc->run_link));
+     if (proc->time_slice  == 0 || proc->time_slice  > rq->max_time_slice) {
+          proc->time_slice = rq->max_time_slice;
+     }
+     proc->rq = rq;
+     rq->proc_num ++;
 }
 
 /*
@@ -85,6 +106,9 @@ stride_dequeue(struct run_queue *rq, struct proc_struct *proc) {
       *         skew_heap_remove: remove a entry from skew_heap
       *         list_del_init: remove a entry from the  list
       */
+     assert(!list_empty(&(proc->run_link)) && proc->rq == rq);
+     list_del_init(&(proc->run_link));
+     rq->proc_num --;
 }
 /*
  * stride_pick_next pick the element from the ``run-queue'', with the
@@ -108,6 +132,23 @@ stride_pick_next(struct run_queue *rq) {
       * (2) update p;s stride value: p->lab6_stride
       * (3) return p
       */
+     list_entry_t *le = list_next(&(rq->run_list));
+     list_entry_t *vicm = le;
+     if (le == &(rq->run_list)) {
+          return NULL;
+     }
+     while (le != &(rq->run_list)) {
+          if (proc_stride_comp_rq_f(vicm, le) <= 0) {
+               vicm = le;
+          }
+          le = list_next(le);
+     }
+     struct proc_struct *p = le2proc(vicm, run_link);
+     assert(p->lab6_priority > 0);
+     // cprintf("%d", BIG_STRIDE);
+     p->lab6_stride += BIG_STRIDE / p->lab6_priority;
+     cprintf("selected: %d, priority: %d, stride: %u\n", p->pid, p->lab6_priority, p->lab6_stride);
+     return p;
 }
 
 /*
@@ -121,6 +162,12 @@ stride_pick_next(struct run_queue *rq) {
 static void
 stride_proc_tick(struct run_queue *rq, struct proc_struct *proc) {
      /* LAB6: YOUR CODE */
+     if (proc->time_slice > 0) {
+          proc->time_slice --;
+     }
+     if (proc->time_slice == 0) {
+          proc->need_resched  = 1;
+     }
 }
 
 struct sched_class default_sched_class = {

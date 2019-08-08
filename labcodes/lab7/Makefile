@@ -288,6 +288,9 @@ debug-nox: $(UCOREIMG) $(SWAPIMG)
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
+debug-vscode: $(UCOREIMG) $(SWAPIMG)
+	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null
+
 RUN_PREFIX	:= _binary_$(OBJDIR)_$(USER_PREFIX)
 MAKEOPTS	:= --quiet --no-print-directory
 
