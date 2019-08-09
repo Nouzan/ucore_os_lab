@@ -37,6 +37,12 @@ cond_signal (condvar_t *cvp) {
    *          }
    *       }
    */
+   if (cvp->count > 0) {
+       cvp->owner->next_count ++;
+       up(&cvp->sem);                // 发出信号并唤醒一个waiter
+       down(&cvp->owner->next);      // 进入睡眠
+       cvp->owner->next_count --;
+   }
    cprintf("cond_signal end: cvp %x, cvp->count %d, cvp->owner->next_count %d\n", cvp, cvp->count, cvp->owner->next_count);
 }
 
@@ -55,5 +61,13 @@ cond_wait (condvar_t *cvp) {
     *         wait(cv.sem);
     *         cv.count --;
     */
+    cvp->count ++;
+    if (cvp->owner->next_count > 0) {  // 判断是否有signaler线程处于睡眠状态(在释放锁之前，必须确保所有的signaler线程退出)
+        up(&cvp->owner->next);          // 唤醒一个signaler
+    } else {
+        up(&cvp->owner->mutex);         // 释放锁
+    }
+    down(&cvp->sem);                    // 睡眠并等待信号
+    cvp->count --;
     cprintf("cond_wait end:  cvp %x, cvp->count %d, cvp->owner->next_count %d\n", cvp, cvp->count, cvp->owner->next_count);
 }

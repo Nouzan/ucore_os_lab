@@ -147,7 +147,7 @@ stride_pick_next(struct run_queue *rq) {
      assert(p->lab6_priority > 0);
      // cprintf("%d", BIG_STRIDE);
      p->lab6_stride += BIG_STRIDE / p->lab6_priority;
-     cprintf("selected: %d, priority: %d, stride: %u\n", p->pid, p->lab6_priority, p->lab6_stride);
+     // cprintf("selected: %d, priority: %d, stride: %u\n", p->pid, p->lab6_priority, p->lab6_stride);
      return p;
 }
 

@@ -75,3 +75,6 @@ try_down(semaphore_t *sem) {
     return ret;
 }
 
+/* 
+ * 由于涉及到需要特权的操作(屏蔽中断)，因此需要实现系统调用机制来进行隔离
+*/
