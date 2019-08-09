@@ -186,7 +186,7 @@ void phi_take_forks_condvar(int i) {
      // try to get fork
      state_condvar[i] = HUNGRY;
      phi_test_condvar(i);
-     if (state_condvar[i] != EATING) {
+     while (state_condvar[i] != EATING) {
        cond_wait(&mtp->cv[i]);          // 检查是否可以拿起两双叉子，不能则阻塞(并等待条件满足)
      }
 
@@ -226,10 +226,12 @@ int philosopher_using_condvar(void * arg) { /* arg is the No. of philosopher 0~N
         cprintf("Iter %d, No.%d philosopher_condvar is thinking\n",iter,i); /* thinking*/
         do_sleep(SLEEP_TIME);
         phi_take_forks_condvar(i); 
+        cprintf("Iter %d, No.%d philosopher_condvar got 2 forks\n",iter,i); /* got forks*/
         /* need two forks, maybe blocked */
         cprintf("Iter %d, No.%d philosopher_condvar is eating\n",iter,i); /* eating*/
         do_sleep(SLEEP_TIME);
         phi_put_forks_condvar(i); 
+        cprintf("Iter %d, No.%d philosopher_condvar put down 2 forks\n",iter,i); /* got forks*/
         /* return two forks back*/
     }
     cprintf("No.%d philosopher_condvar quit\n",i);
