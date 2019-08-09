@@ -87,3 +87,10 @@ cond_wait (condvar_t *cvp) {
 
     cprintf("cond_wait end:  cvp %x, cvp->count %d, cvp->owner->next_count %d\n", cvp, cvp->count, cvp->owner->next_count);
 }
+
+/* 
+ * 不使用信号量的方案：
+ * 需要另外实现一个等待队列
+ * signal: 如果count > 0, 则从等待队列中唤醒1个线程，并将count--
+ * wait: count ++，然后 先 把自己丢入等待队列 后 释放锁(确保原子性)，然后主动调度，回来后重新取得锁
+ */
